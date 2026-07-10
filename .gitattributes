@@ -1,0 +1,4 @@
+# Force LF for shell scripts so a Windows checkout (CRLF) never breaks the
+# shebang / bash parsing when run under WSL2 or Git Bash.
+scripts/meeting-translate text eol=lf
+*.sh text eol=lf

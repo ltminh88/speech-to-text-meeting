@@ -28,6 +28,20 @@ and **Groq** (speech-to-text + translation).
 - A free **Supabase** account — https://supabase.com
 - A free **Groq** account — https://console.groq.com
 
+> **On Windows:** the `meeting-translate` script is bash, and Podman on
+> Windows needs a Linux VM underneath anyway — so do everything inside
+> **WSL2** rather than native PowerShell/CMD:
+> ```powershell
+> wsl --install
+> ```
+> Then, inside the Ubuntu terminal that opens:
+> ```bash
+> sudo apt update && sudo apt install -y nodejs npm podman git
+> ```
+> From here on, every command below is identical to macOS/Linux — run
+> them inside that Ubuntu (WSL2) terminal. Bonus: Podman on WSL2 doesn't
+> need `podman machine start` at all (that's a macOS-only step).
+
 ## 2. Get the code running
 
 ```bash
