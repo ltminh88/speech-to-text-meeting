@@ -89,7 +89,7 @@ Everything else in `.env.example` already has a working default for local use.
 ## 7. Run it
 
 ```bash
-./scripts/dev-up.sh
+./scripts/meeting-translate up
 ```
 
 This starts all three services in the background. Wait a couple of
@@ -99,7 +99,7 @@ create a session.
 To stop everything:
 
 ```bash
-./scripts/dev-down.sh
+./scripts/meeting-translate down
 ```
 
 Logs while running: `/tmp/stt-meeting-web.log` and
@@ -111,14 +111,14 @@ Logs while running: `/tmp/stt-meeting-web.log` and
   browsers only allow microphone access on `localhost` or HTTPS. This is a
   hard browser rule, not a bug — if you ever deploy this somewhere with a
   public IP, you'll need a domain + SSL certificate for the mic to work.
-- **`dev-up.sh` fails with a Podman error mentioning "no such file or
-  directory"** — a leftover Centrifugo container from a previous folder
-  location. Fix: `podman rm -f mp-centrifugo` then run `./scripts/dev-up.sh`
-  again.
+- **`meeting-translate up` fails with a Podman error mentioning "no such
+  file or directory"** — a leftover Centrifugo container from a previous
+  folder location. Fix: `podman rm -f mp-centrifugo` then run
+  `./scripts/meeting-translate up` again.
 - **Podman commands hang or fail on macOS** — the Podman VM isn't running:
   `podman machine start`.
-- **Port already in use** — something's already running; `./scripts/dev-down.sh`
-  first, then try again.
+- **Port already in use** — something's already running;
+  `./scripts/meeting-translate down` first, then try again.
 
 ## Project structure
 
@@ -127,7 +127,7 @@ src/                        SvelteKit app (UI + API routes)
 services/realtime-server/   Node WebSocket service (audio → Groq → captions)
 supabase/migrations/        Database schema, in numbered order
 centrifugo/                 Centrifugo config for local Podman
-scripts/                    dev-up.sh / dev-down.sh convenience scripts
+scripts/                    meeting-translate up|down convenience script
 plans/                      Full technical plan + phase-by-phase design notes
 ```
 
