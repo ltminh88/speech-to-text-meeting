@@ -1,7 +1,7 @@
 import { broadcastCaption } from './broadcast.js';
 import { saveTranscript } from './save-transcript.js';
 import { recordFinal, recordTokenProcess } from './metrics.js';
-import type { CaptionPayload, ConnectionContext, SonioxToken } from './types.js';
+import type { CaptionPayload, ConnectionContext, AsrToken } from './types.js';
 
 // Monotonic sequence per session (multi-speaker safe). Cleared when a session drains.
 const sessionSeq = new Map<string, number>();
@@ -15,7 +15,9 @@ export function resetSession(sessionId: string) {
 }
 
 /**
- * Buffers partial tokens and, on a final token, flushes.
+ * Buffers partial tokens and, on a final token, flushes. With Groq (REST, no
+ * partial/live tokens) every call is final — the partial branch below is dead
+ * code today but kept so a future streaming-capable ASR can plug in unchanged.
  * Dispatch to DB save + Centrifugo broadcast is FIRE-AND-FORGET — never awaited —
  * so a slow DB write cannot stall live captions (core design invariant, strategy §2).
  */
@@ -23,7 +25,7 @@ export class TokenProcessor {
   private partial = '';
   constructor(private ctx: ConnectionContext) {}
 
-  handleToken(tok: SonioxToken): void {
+  handleToken(tok: AsrToken): void {
     const start = performance.now();
 
     if (tok.isFinal) {
@@ -44,7 +46,7 @@ export class TokenProcessor {
     recordTokenProcess(performance.now() - start);
   }
 
-  private buildPayload(tok: SonioxToken, isFinal: boolean): CaptionPayload {
+  private buildPayload(tok: AsrToken, isFinal: boolean): CaptionPayload {
     return {
       text: tok.text,
       translations: tok.translations ?? {},

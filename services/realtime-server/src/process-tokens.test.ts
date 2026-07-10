@@ -7,17 +7,18 @@ vi.mock('./save-transcript.js', () => ({ saveTranscript: vi.fn(async () => {}) }
 import { TokenProcessor, resetSession } from './process-tokens.js';
 import { broadcastCaption } from './broadcast.js';
 import { saveTranscript } from './save-transcript.js';
-import type { ConnectionContext, SonioxToken } from './types.js';
+import type { ConnectionContext, AsrToken } from './types.js';
 
 const ctx: ConnectionContext = {
   sessionId: 's1',
   participantId: 'p1',
+  speakerName: 'Speaker 1',
   encryptionKeyRef: 'ref',
   config: { mode: 'one_way', no_translation: false, no_record: false, source_language: 'en', target_language: 'ja', language_a: null, language_b: null }
 };
 
-const partial: SonioxToken = { text: 'hel', isFinal: false, speakerId: '1', speakerName: 'Speaker 1', lang: 'en', translations: {} };
-const final: SonioxToken = { text: 'hello', isFinal: true, speakerId: '1', speakerName: 'Speaker 1', lang: 'en', translations: { ja: 'こんにちは' } };
+const partial: AsrToken = { text: 'hel', isFinal: false, speakerId: '1', speakerName: 'Speaker 1', lang: 'en', translations: {} };
+const final: AsrToken = { text: 'hello', isFinal: true, speakerId: '1', speakerName: 'Speaker 1', lang: 'en', translations: { ja: 'こんにちは' } };
 
 describe('TokenProcessor', () => {
   beforeEach(() => {

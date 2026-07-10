@@ -25,8 +25,8 @@ export interface SessionConfig {
   language_b: string | null;
 }
 
-// Normalized token emitted by the Soniox client wrapper.
-export interface SonioxToken {
+// Normalized token emitted by the ASR client wrapper (Groq: Whisper transcribe + Llama translate).
+export interface AsrToken {
   text: string;
   isFinal: boolean;
   speakerId: string;
@@ -38,6 +38,7 @@ export interface SonioxToken {
 export interface ConnectionContext {
   sessionId: string;
   participantId: string;
+  speakerName: string;
   encryptionKeyRef: string;
   config: SessionConfig;
 }

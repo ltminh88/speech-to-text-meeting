@@ -1,7 +1,9 @@
-# Phase 2 — Realtime pipeline (Soniox + Centrifugo) ⭐
+# Phase 2 — Realtime pipeline (Groq + Centrifugo) ⭐
 
-**Priority:** P1 · **Status:** done (code+typecheck+unit tests; live Soniox/Centrifugo run deferred) · **Depends:** Phase 0, 1 · **Effort:** 1.5-2w
+**Priority:** P1 · **Status:** done (code+typecheck+unit tests; live audio run pending Groq key) · **Depends:** Phase 0, 1 · **Effort:** 1.5-2w
 **Highest technical risk — build earliest for risk reduction.**
+
+> **2026-07-10 ASR provider change:** swapped Soniox → **Groq** (Whisper large-v3-turbo transcribe + Llama-3.3-70b translate). Reason: user only needs one-way translation into Vietnamese, and Groq's free tier (2,000 req/day + 2h audio/hour, no card) sustains real day-to-day use, unlike Soniox's one-time 300-min trial or Gemini's ~10 req/min cap. Trade-off: Groq is REST-only (no persistent stream) — client now records self-contained ~4s clips (`AUDIO_SEGMENT_MS`) instead of continuous 250ms streaming, so captions arrive as ~4s "final" bursts with no live partial/typing phase. Diarization is unnecessary in this app's architecture since each participant already has their own mic connection (`participantId` doubles as speaker identity). Everything below this note describes the original Soniox-streaming design; `src/lib/realtime/audio-capture.ts` and `services/realtime-server/src/groq-client.ts` are the current implementation.
 
 ## Context Links
 - Pipeline spec (dev debug-panel, tiếng Việt): `../reports/researcher-260710-0825-meet-plus-rebuild-strategy.md` §2

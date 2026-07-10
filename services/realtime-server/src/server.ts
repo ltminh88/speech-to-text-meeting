@@ -1,7 +1,7 @@
 import { WebSocketServer, WebSocket } from 'ws';
 import { createClient } from '@supabase/supabase-js';
 import { config } from './config.js';
-import { SonioxClient } from './soniox-client.js';
+import { transcribeAndTranslate } from './groq-client.js';
 import { TokenProcessor } from './process-tokens.js';
 import { snapshot } from './metrics.js';
 import type { ConnectionContext, SessionConfig } from './types.js';
@@ -24,17 +24,21 @@ interface StartFrame {
 async function authorize(frame: StartFrame): Promise<ConnectionContext> {
   const { data: participant } = await admin
     .from('session_participants')
-    .select('id, user_id, session_id, status')
+    .select('id, user_id, session_id, status, guest_name')
     .eq('id', frame.participantId)
     .eq('session_id', frame.sessionId)
     .single();
   if (!participant || participant.status === 'rejected') throw new Error('not a session participant');
 
   // Authed participants must present a token whose user matches the participant row.
+  let profileName: string | null = null;
   if (participant.user_id) {
     if (!frame.token) throw new Error('token required');
     const { data, error } = await anon.auth.getUser(frame.token);
     if (error || data.user?.id !== participant.user_id) throw new Error('token/participant mismatch');
+
+    const { data: profile } = await admin.from('users').select('name, email').eq('id', participant.user_id).single();
+    profileName = profile?.name ?? profile?.email ?? null;
   }
 
   const { data: session } = await admin
@@ -45,27 +49,29 @@ async function authorize(frame: StartFrame): Promise<ConnectionContext> {
   if (!session || session.status !== 'active') throw new Error('session not active');
 
   const cfg: SessionConfig = session as unknown as SessionConfig;
-  return { sessionId: session.id, participantId: participant.id, encryptionKeyRef: session.encryption_key_ref, config: cfg };
+  return {
+    sessionId: session.id,
+    participantId: participant.id,
+    speakerName: participant.guest_name ?? profileName ?? 'Guest',
+    encryptionKeyRef: session.encryption_key_ref,
+    config: cfg
+  };
 }
 
 const wss = new WebSocketServer({ port: config.port, path: '/realtime' });
 
 wss.on('connection', (ws: WebSocket) => {
-  let soniox: SonioxClient | null = null;
+  let ctx: ConnectionContext | null = null;
+  let processor: TokenProcessor | null = null;
 
   ws.on('message', async (data: Buffer, isBinary: boolean) => {
-    if (!isBinary && !soniox) {
+    if (!isBinary && !ctx) {
       // First text frame must be the start/control frame.
       try {
         const frame = JSON.parse(data.toString()) as StartFrame;
         if (frame.type !== 'start') return;
-        const ctx = await authorize(frame);
-        const processor = new TokenProcessor(ctx);
-        soniox = new SonioxClient(
-          ctx.config,
-          (tok) => processor.handleToken(tok),
-          (err) => ws.send(JSON.stringify({ type: 'error', message: err.message }))
-        );
+        ctx = await authorize(frame);
+        processor = new TokenProcessor(ctx);
         ws.send(JSON.stringify({ type: 'ready' }));
       } catch (err) {
         ws.send(JSON.stringify({ type: 'error', message: (err as Error).message }));
@@ -73,10 +79,18 @@ wss.on('connection', (ws: WebSocket) => {
       }
       return;
     }
-    if (isBinary && soniox) soniox.sendAudio(data); // audio frame → Soniox (never stored)
-  });
 
-  ws.on('close', () => soniox?.close());
+    // Each binary message is one complete, self-contained audio clip (client
+    // records fixed-length segments — Groq's REST API has no persistent stream).
+    if (isBinary && ctx && processor) {
+      try {
+        const tok = await transcribeAndTranslate(data, ctx.config, ctx.participantId, ctx.speakerName);
+        if (tok) processor.handleToken(tok);
+      } catch (err) {
+        ws.send(JSON.stringify({ type: 'error', message: (err as Error).message }));
+      }
+    }
+  });
 });
 
 // Push metrics to the SvelteKit health endpoint (feeds Phase 6 queue-health).

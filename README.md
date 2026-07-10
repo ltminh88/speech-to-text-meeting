@@ -1,14 +1,16 @@
 # Meet Plus (rebuild)
 
 Real-time translation & meeting-minutes system. Rebuilt from scratch on
-SvelteKit + Supabase + Centrifugo + Soniox. See the plan in
+SvelteKit + Supabase + Centrifugo + Groq. See the plan in
 `plans/260710-0846-meet-plus-rebuild/plan.md`.
 
 ## Stack
 - **SvelteKit** (SSR + CSR), Tailwind — `adapter-node`
 - **Supabase** (Postgres + Google OAuth + RLS)
 - **Centrifugo** (self-host) — realtime captions pub/sub
-- **Soniox** — streaming ASR + translation (Phase 2)
+- **Groq** — Whisper transcription + Llama translation, ~4s segments (Phase 2).
+  Swapped in for the original Soniox (streaming, no free tier) — Groq's free
+  tier (2,000 req/day, 2h audio/hour) sustains real testing without a card.
 - **OpenAI / Gemini** — async meeting-minutes summarization (Phase 3)
 
 ## Phase 0 — Foundation (done)
