@@ -6,7 +6,7 @@
   import { CaptionStore } from '$lib/realtime/caption-store.svelte';
   import { subscribeCaptions, type LinkState } from '$lib/realtime/centrifugo-connection';
   import { AudioCapture, type CaptureState } from '$lib/realtime/audio-capture';
-  import type { CaptionPayload } from '$lib/realtime/caption-types';
+  import type { CaptionPayload, StoredSegment } from '$lib/realtime/caption-types';
   import { LANGUAGES } from '$lib/session/session-config';
   import type { PageData } from './$types';
 
@@ -67,7 +67,18 @@
     return SPEAKER_COLORS[hash % SPEAKER_COLORS.length];
   }
 
-  onMount(() => subscribeCaptions(PUBLIC_CENTRIFUGO_WS_URL, s.id, store, (st) => (link = st)));
+  onMount(() => {
+    // Backfill already-persisted transcript before the live feed picks up,
+    // so leaving and rejoining (or a plain refresh) doesn't lose history.
+    fetch(`/api/sessions/${s.id}/transcript`)
+      .then((res) => (res.ok ? res.json() : { segments: [] }))
+      .then(({ segments }: { segments: StoredSegment[] }) => {
+        store.loadHistory(segments.map((seg): CaptionPayload => ({ ...seg, isFinal: true })));
+      })
+      .catch(() => {});
+
+    return subscribeCaptions(PUBLIC_CENTRIFUGO_WS_URL, s.id, store, (st) => (link = st));
+  });
 
   async function toggleSpeak() {
     if (capState === 'live' || capState === 'connecting') {

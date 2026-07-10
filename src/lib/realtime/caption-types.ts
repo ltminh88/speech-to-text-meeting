@@ -19,6 +19,11 @@ export interface CaptionEvent {
   payload: CaptionPayload;
 }
 
+// A persisted transcript row, shaped identically to CaptionPayload minus isFinal
+// (stored rows are always final) — lets the client turn history straight into
+// CaptionPayload objects with a single `{ ...seg, isFinal: true }`.
+export type StoredSegment = Omit<CaptionPayload, 'isFinal'>;
+
 // Client display rule (from bundle): show the first available translation, else source text.
 export function displayText(p: CaptionPayload): string {
   const first = Object.keys(p.translations)[0];

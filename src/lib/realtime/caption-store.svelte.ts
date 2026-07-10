@@ -27,6 +27,15 @@ export class CaptionStore {
     this.finals = next;
   }
 
+  // Seed already-persisted rows (e.g. on page load) ahead of the live feed —
+  // dedupes against seenSeq so a row that's both loaded here and re-broadcast
+  // live never appears twice.
+  loadHistory(payloads: CaptionPayload[]): void {
+    const fresh = payloads.filter((p) => !this.seenSeq.has(p.sequenceNumber));
+    fresh.forEach((p) => this.seenSeq.add(p.sequenceNumber));
+    this.finals = [...this.finals, ...fresh].sort((a, b) => a.sequenceNumber - b.sequenceNumber);
+  }
+
   reset(): void {
     this.finals = [];
     this.partials = {};
