@@ -112,6 +112,9 @@
       <span class="text-xs" class:text-emerald-600={link === 'live'} class:text-amber-500={link !== 'live'}>
         ● {link}
       </span>
+      <a href={`/session/${s.id}/minutes`} class="rounded-lg border border-slate-300 px-3 py-1.5 text-sm dark:border-slate-700">
+        📝 Minutes
+      </a>
       {#if s.is_host && s.status === 'active'}
         <button onclick={endSession} disabled={ending} class="rounded-lg border border-red-300 px-3 py-1.5 text-sm text-red-600 disabled:opacity-50">
           {ending ? 'Ending…' : 'End'}

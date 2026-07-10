@@ -1,6 +1,6 @@
 # Phase 3 — Meeting Minutes export (async summarization)
 
-**Priority:** P1 · **Status:** pending · **Depends:** Phase 2 · **Effort:** 3-5d
+**Priority:** P1 · **Status:** done (code+typecheck+unit tests; live LLM run pending API key) · **Depends:** Phase 2 · **Effort:** 3-5d
 
 ## Context Links
 - Strategy §2 (OpenAI/Gemini = minutes only, on-demand): `../reports/researcher-260710-0825-meet-plus-rebuild-strategy.md`
