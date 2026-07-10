@@ -113,21 +113,29 @@
   }
 </script>
 
-<main class="mx-auto max-w-5xl p-8">
-  <header class="mb-4 flex items-start justify-between">
+<main class="mx-auto min-h-screen max-w-5xl bg-app p-8">
+  <header class="mb-5 flex items-start justify-between">
     <div>
-      <h1 class="text-2xl font-semibold text-brand">{s.title ?? 'Untitled session'}</h1>
-      <p class="mt-1 text-sm text-slate-500">{modeLabel[s.mode]} · {s.status}{s.no_record ? ' · no-record' : ''}</p>
+      <h1 class="text-2xl font-semibold text-ink-primary">{s.title ?? 'Untitled session'}</h1>
+      <p class="mt-1 text-sm text-ink-muted">{modeLabel[s.mode]} · {s.status}{s.no_record ? ' · no-record' : ''}</p>
     </div>
     <div class="flex items-center gap-3">
-      <span class="text-xs" class:text-emerald-600={link === 'live'} class:text-amber-500={link !== 'live'}>
-        ● {link}
+      <span class="flex items-center gap-1.5 rounded-full border border-border bg-panel px-3 py-1 text-xs font-medium text-ink-secondary">
+        <span class="h-1.5 w-1.5 rounded-full {link === 'live' ? 'bg-success' : 'bg-warning'}"></span>
+        {link}
       </span>
-      <a href={`/session/${s.id}/minutes`} class="rounded-lg border border-slate-300 px-3 py-1.5 text-sm dark:border-slate-700">
+      <a
+        href={`/session/${s.id}/minutes`}
+        class="rounded-full border border-border px-4 py-1.5 text-sm font-medium text-ink-primary transition-colors hover:border-border-hover hover:bg-elevated"
+      >
         📝 Minutes
       </a>
       {#if s.is_host && s.status === 'active'}
-        <button onclick={endSession} disabled={ending} class="rounded-lg border border-red-300 px-3 py-1.5 text-sm text-red-600 disabled:opacity-50">
+        <button
+          onclick={endSession}
+          disabled={ending}
+          class="rounded-full border border-error/30 px-4 py-1.5 text-sm font-medium text-error transition-colors hover:bg-error/10 disabled:opacity-50"
+        >
           {ending ? 'Ending…' : 'End'}
         </button>
       {/if}
@@ -135,46 +143,61 @@
   </header>
 
   {#if s.status === 'active'}
-    <button onclick={toggleSpeak} class="mb-4 rounded-lg bg-brand px-4 py-2 font-medium text-white">
+    <button
+      onclick={toggleSpeak}
+      class="mb-4 rounded-full px-5 py-2.5 font-medium text-white shadow-soft-sm transition-colors {capState === 'live'
+        ? 'bg-warning hover:bg-warning/90'
+        : 'bg-brand hover:bg-brand-hover'}"
+    >
       {capState === 'live' ? '⏹ Stop speaking' : '🎙 Start speaking'}
     </button>
-    {#if capErr}<p class="mb-3 text-sm text-red-600">{capErr}</p>{/if}
+    {#if capErr}<p class="mb-3 text-sm text-error">{capErr}</p>{/if}
   {/if}
 
   {#if s.mode === 'none'}
     <!-- Transcription-only: no translation exists, so a single column is all there is. -->
-    <section class="min-h-[16rem] space-y-3 rounded-xl border border-slate-200 p-4 dark:border-slate-800">
+    <section class="min-h-[16rem] space-y-3 rounded-2xl border border-border bg-panel p-5 shadow-soft-sm">
       {#each store.finals as f (f.sequenceNumber)}
-        <p class="text-sm"><span class="font-medium {speakerColor(f.speakerId)}">{f.speakerName || 'Speaker'}:</span> {f.text}</p>
+        <p class="text-sm text-ink-primary"><span class="font-medium {speakerColor(f.speakerId)}">{f.speakerName || 'Speaker'}:</span> {f.text}</p>
       {/each}
       {#if store.finals.length === 0}
-        <p class="py-12 text-center text-sm text-slate-400">Captions will appear here as people speak.</p>
+        <p class="py-12 text-center text-sm text-ink-muted">Captions will appear here as people speak.</p>
       {/if}
     </section>
   {:else}
     {#snippet splitView(compact: boolean)}
-      <div class="grid grid-cols-2 divide-x divide-slate-200 bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-400 dark:divide-slate-800 dark:bg-slate-900">
-        <div class="px-4 py-2">{langLabel(leftLang)}</div>
-        <div class="px-4 py-2">{langLabel(rightLang)}</div>
+      <div class="grid grid-cols-2 divide-x divide-border bg-elevated text-xs font-semibold uppercase tracking-wide text-ink-muted">
+        <div class="px-5 py-2.5">{langLabel(leftLang)}</div>
+        <div class="px-5 py-2.5">{langLabel(rightLang)}</div>
       </div>
       <div
         bind:this={scrollEl}
-        class="grid grid-cols-2 divide-x divide-slate-200 overflow-y-auto dark:divide-slate-800"
+        class="grid grid-cols-2 divide-x divide-border overflow-y-auto"
         class:max-h-[28rem]={compact}
         class:flex-1={!compact}
       >
         {#each store.finals as f (f.sequenceNumber)}
           {@const row = splitRow(f)}
-          <div class="px-4 py-2">
-            <p class="text-xs font-medium {speakerColor(f.speakerId)}">{f.speakerName || 'Speaker'}</p>
-            {#if row.left}<p class={compact ? 'text-sm' : 'text-lg'} class:italic={row.leftTranslated} class:text-slate-400={row.leftTranslated}>{row.left}</p>{/if}
+          <div class="px-5 py-3">
+            <p class="mb-0.5 text-xs font-medium {speakerColor(f.speakerId)}">
+              {f.speakerName || 'Speaker'}
+              {#if row.leftTranslated}
+                <span class="ml-1 rounded-full bg-success/10 px-1.5 py-0.5 text-[10px] font-normal text-success">Translated</span>
+              {/if}
+            </p>
+            {#if row.left}<p class={compact ? 'text-sm text-ink-primary' : 'text-lg text-ink-primary'} class:italic={row.leftTranslated} class:text-ink-tertiary={row.leftTranslated}>{row.left}</p>{/if}
           </div>
-          <div class="px-4 py-2">
-            <p class="text-xs font-medium {speakerColor(f.speakerId)}">{f.speakerName || 'Speaker'}</p>
-            {#if row.right}<p class={compact ? 'text-sm' : 'text-lg'} class:italic={row.rightTranslated} class:text-slate-400={row.rightTranslated}>{row.right}</p>{/if}
+          <div class="px-5 py-3">
+            <p class="mb-0.5 text-xs font-medium {speakerColor(f.speakerId)}">
+              {f.speakerName || 'Speaker'}
+              {#if row.rightTranslated}
+                <span class="ml-1 rounded-full bg-success/10 px-1.5 py-0.5 text-[10px] font-normal text-success">Translated</span>
+              {/if}
+            </p>
+            {#if row.right}<p class={compact ? 'text-sm text-ink-primary' : 'text-lg text-ink-primary'} class:italic={row.rightTranslated} class:text-ink-tertiary={row.rightTranslated}>{row.right}</p>{/if}
           </div>
         {:else}
-          <p class="col-span-2 py-12 text-center text-sm text-slate-400">Captions will appear here as people speak.</p>
+          <p class="col-span-2 py-12 text-center text-sm text-ink-muted">Captions will appear here as people speak.</p>
         {/each}
       </div>
     {/snippet}
@@ -183,9 +206,9 @@
          column matches the speaker's language, translation in the other.
          Unmounted while expanded (below) to avoid a duplicate scrollEl bind. -->
     {#if !expanded}
-      <section class="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800">
-        <div class="flex justify-end border-b border-slate-200 px-2 py-1 dark:border-slate-800">
-          <button onclick={() => (expanded = true)} class="rounded px-2 py-1 text-xs text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-900">
+      <section class="overflow-hidden rounded-2xl border border-border bg-panel shadow-soft-sm">
+        <div class="flex justify-end border-b border-border px-2 py-1">
+          <button onclick={() => (expanded = true)} class="rounded-full px-3 py-1 text-xs text-ink-muted transition-colors hover:bg-elevated">
             ⛶ Expand
           </button>
         </div>
@@ -194,27 +217,30 @@
     {/if}
 
     {#if expanded}
-      <div class="fixed inset-0 z-50 flex flex-col bg-white p-6 dark:bg-slate-950">
+      <div class="fixed inset-0 z-50 flex flex-col bg-app p-6">
         <div class="mb-3 flex shrink-0 items-center justify-between">
-          <h2 class="text-lg font-semibold text-brand">{s.title ?? 'Untitled session'}</h2>
-          <button onclick={() => (expanded = false)} class="rounded-lg border border-slate-300 px-3 py-1.5 text-sm dark:border-slate-700">
+          <h2 class="text-lg font-semibold text-ink-primary">{s.title ?? 'Untitled session'}</h2>
+          <button
+            onclick={() => (expanded = false)}
+            class="rounded-full border border-border px-4 py-1.5 text-sm font-medium text-ink-primary transition-colors hover:border-border-hover hover:bg-elevated"
+          >
             ✕ Exit fullscreen
           </button>
         </div>
-        <div class="flex flex-1 flex-col overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800">
+        <div class="flex flex-1 flex-col overflow-hidden rounded-2xl border border-border bg-panel shadow-soft-lg">
           {@render splitView(false)}
         </div>
       </div>
     {/if}
   {/if}
 
-  <section class="mt-6">
-    <h2 class="mb-2 text-sm font-semibold uppercase tracking-wide text-slate-400">Participants</h2>
-    <ul class="divide-y divide-slate-100 dark:divide-slate-800">
+  <section class="mt-6 rounded-2xl border border-border bg-panel p-5 shadow-soft-sm">
+    <h2 class="mb-2 text-sm font-semibold uppercase tracking-wide text-ink-muted">Participants</h2>
+    <ul class="divide-y divide-border">
       {#each data.participants as p (p.id)}
         <li class="flex items-center justify-between py-2 text-sm">
-          <span>{p.guest_name ?? p.user_id ?? 'Unknown'}</span>
-          <span class="text-slate-400">{p.role} · {p.status}</span>
+          <span class="text-ink-primary">{p.guest_name ?? p.user_id ?? 'Unknown'}</span>
+          <span class="text-ink-muted">{p.role} · {p.status}</span>
         </li>
       {/each}
     </ul>

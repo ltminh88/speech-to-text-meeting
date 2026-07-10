@@ -28,14 +28,27 @@
   }
 </script>
 
-<main class="mx-auto max-w-md p-8">
-  <h1 class="mb-6 text-2xl font-semibold text-brand">Join a session</h1>
-  <label class="mb-4 block">
-    <span class="text-sm font-medium">Session link or ID</span>
-    <input bind:value={code} class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 dark:border-slate-700 dark:bg-slate-900" placeholder="https://…/session/…" />
-  </label>
-  {#if err}<p class="mb-4 rounded-md bg-red-50 px-3 py-2 text-sm text-red-600">{err}</p>{/if}
-  <button onclick={join} disabled={joining || !code} class="rounded-lg bg-brand px-5 py-2.5 font-medium text-white disabled:opacity-50">
-    {joining ? 'Joining…' : 'Join'}
-  </button>
+<main class="flex min-h-screen justify-center bg-app p-8">
+  <div class="w-full max-w-md">
+    <a href="/dashboard" class="mb-4 inline-block text-sm text-ink-muted hover:text-ink-secondary">← Dashboard</a>
+    <div class="rounded-2xl border border-border bg-panel p-8 shadow-soft-md">
+      <h1 class="mb-6 text-xl font-semibold text-ink-primary">Join a session</h1>
+      <label class="mb-5 block">
+        <span class="text-sm font-medium text-ink-secondary">Session link or ID</span>
+        <input
+          bind:value={code}
+          class="mt-1 w-full rounded-lg border border-border bg-panel px-3 py-2 text-ink-primary placeholder:text-ink-muted focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand"
+          placeholder="https://…/session/…"
+        />
+      </label>
+      {#if err}<p class="mb-4 rounded-lg bg-error/10 px-3 py-2 text-sm text-error">{err}</p>{/if}
+      <button
+        onclick={join}
+        disabled={joining || !code}
+        class="w-full rounded-full bg-brand px-5 py-2.5 font-medium text-white shadow-soft-sm transition-colors hover:bg-brand-hover disabled:opacity-50"
+      >
+        {joining ? 'Joining…' : 'Join'}
+      </button>
+    </div>
+  </div>
 </main>
