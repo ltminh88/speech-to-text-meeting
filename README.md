@@ -1,4 +1,6 @@
-# Meet Plus (rebuild)
+# speech-to-text-meeting
+
+Formerly "Meet Plus (rebuild)".
 
 Real-time translation & meeting-minutes system. Rebuilt from scratch on
 SvelteKit + Supabase + Centrifugo + Groq. See the plan in

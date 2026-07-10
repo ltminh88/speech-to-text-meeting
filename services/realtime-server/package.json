@@ -1,5 +1,5 @@
 {
-  "name": "meet-plus-realtime-server",
+  "name": "speech-to-text-meeting-realtime-server",
   "version": "0.1.0",
   "private": true,
   "type": "module",

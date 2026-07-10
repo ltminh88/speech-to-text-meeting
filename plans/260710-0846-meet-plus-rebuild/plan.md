@@ -19,7 +19,7 @@ UI/state logic = tái dùng được sau khi beautify (không copy trực tiếp
 ## Context
 - Arch spec: `/Users/minhlt/plans/reports/reverse-260710-0757-meet-plus-architecture.md`
 - Rebuild strategy (schema, channels, pipeline thật): `../reports/researcher-260710-0825-meet-plus-rebuild-strategy.md`
-- Mirror bundle: `/Users/minhlt/Downloads/Projects/meet-plus-clone/_reverse/mirror/_app/immutable`
+- Mirror bundle: `/Users/minhlt/Downloads/Projects/speech-to-text-meeting/_reverse/mirror/_app/immutable`
 
 ## Kiến trúc đích (chốt)
 SvelteKit (SSR+CSR) · Supabase (Postgres + Google OAuth + RLS) · Centrifugo self-host (pub/sub captions)
