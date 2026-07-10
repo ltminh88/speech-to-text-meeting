@@ -1,7 +1,6 @@
 import { json, error } from '@sveltejs/kit';
 import { validateSessionConfig, normalizeConfig } from '$lib/session/session-config';
 import { decrypt, encrypt } from '$lib/server/crypto';
-import { maybeExpireSession } from '$lib/server/session-expiry';
 import type { RequestHandler } from './$types';
 
 // Session config + participants for UI hydration (RLS-scoped read).
@@ -11,8 +10,6 @@ export const GET: RequestHandler = async ({ params, locals: { supabase, user } }
   const { data: s, error: sErr } = await supabase.from('sessions').select('*').eq('id', params.id).single();
   if (sErr || !s) throw error(404, 'session not found');
 
-  const effectiveStatus = await maybeExpireSession(supabase, s.id, s.status, s.expires_at);
-
   const { data: participants } = await supabase
     .from('session_participants')
     .select('id, user_id, guest_name, role, status, muted, joined_at')
@@ -21,7 +18,7 @@ export const GET: RequestHandler = async ({ params, locals: { supabase, user } }
   return json({
     session: {
       id: s.id,
-      status: effectiveStatus,
+      status: s.status,
       mode: s.mode,
       no_translation: s.no_translation,
       no_record: s.no_record,
@@ -33,8 +30,7 @@ export const GET: RequestHandler = async ({ params, locals: { supabase, user } }
       is_host: s.host_id === user.id,
       my_participant_id: (participants ?? []).find((p) => p.user_id === user.id)?.id ?? null,
       started_at: s.started_at,
-      ended_at: s.ended_at,
-      expires_at: s.expires_at
+      ended_at: s.ended_at
     },
     participants: participants ?? []
   });

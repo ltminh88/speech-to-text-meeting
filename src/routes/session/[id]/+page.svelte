@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { goto, invalidateAll } from '$app/navigation';
+  import { goto } from '$app/navigation';
   import { page } from '$app/state';
   import { PUBLIC_CENTRIFUGO_WS_URL, PUBLIC_REALTIME_WS_URL } from '$env/static/public';
   import { CaptionStore } from '$lib/realtime/caption-store.svelte';
@@ -27,32 +27,6 @@
     store.finals.length;
     if (scrollEl) scrollEl.scrollTop = scrollEl.scrollHeight;
   });
-
-  // Live countdown against the session's duration limit, if it has one.
-  // Ticks locally; once it hits zero, re-fetch so the server's lazy
-  // expiration (which is authoritative) flips the UI to "ended".
-  let remainingMs = $state<number | null>(null);
-  $effect(() => {
-    if (s.status !== 'active' || !s.expires_at) {
-      remainingMs = null;
-      return;
-    }
-    const target = new Date(s.expires_at).getTime();
-    const tick = () => {
-      remainingMs = Math.max(0, target - Date.now());
-      if (remainingMs === 0) invalidateAll();
-    };
-    tick();
-    const interval = setInterval(tick, 1000);
-    return () => clearInterval(interval);
-  });
-
-  function formatRemaining(ms: number): string {
-    const totalSeconds = Math.floor(ms / 1000);
-    const m = Math.floor(totalSeconds / 60);
-    const sec = totalSeconds % 60;
-    return `${m}:${sec.toString().padStart(2, '0')}`;
-  }
 
   const modeLabel: Record<string, string> = { none: 'Transcription only', one_way: 'One-way', two_way: 'Two-way' };
 
@@ -146,15 +120,6 @@
       <p class="mt-1 text-sm text-ink-muted">{modeLabel[s.mode]} · {s.status}{s.no_record ? ' · no-record' : ''}</p>
     </div>
     <div class="flex items-center gap-3">
-      {#if remainingMs !== null}
-        <span
-          class="rounded-full border px-3 py-1 text-xs font-medium {remainingMs < 5 * 60_000
-            ? 'border-warning/30 bg-warning/10 text-warning'
-            : 'border-border bg-panel text-ink-secondary'}"
-        >
-          ⏱ {formatRemaining(remainingMs)}
-        </span>
-      {/if}
       <span class="flex items-center gap-1.5 rounded-full border border-border bg-panel px-3 py-1 text-xs font-medium text-ink-secondary">
         <span class="h-1.5 w-1.5 rounded-full {link === 'live' ? 'bg-success' : 'bg-warning'}"></span>
         {link}

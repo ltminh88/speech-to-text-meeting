@@ -1,6 +1,5 @@
 import { json, error } from '@sveltejs/kit';
 import { supabaseAdmin } from '$lib/server/admin';
-import { maybeExpireSession } from '$lib/server/session-expiry';
 import type { RequestHandler } from './$types';
 
 // Join a session by id. Authed users join as themselves; guests get a server-minted
@@ -8,13 +7,11 @@ import type { RequestHandler } from './$types';
 export const POST: RequestHandler = async ({ params, request, locals: { user } }) => {
   const { data: session, error: sErr } = await supabaseAdmin
     .from('sessions')
-    .select('id, status, mode, no_translation, no_record, source_language, target_language, language_a, language_b, expires_at')
+    .select('id, status, mode, no_translation, no_record, source_language, target_language, language_a, language_b')
     .eq('id', params.id)
     .single();
   if (sErr || !session) throw error(404, 'session not found');
-
-  const effectiveStatus = await maybeExpireSession(supabaseAdmin, session.id, session.status, session.expires_at);
-  if (effectiveStatus !== 'active') throw error(409, 'session has ended');
+  if (session.status !== 'active') throw error(409, 'session has ended');
 
   let guestName: string | null = null;
   if (!user) {
