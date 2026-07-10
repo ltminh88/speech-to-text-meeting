@@ -31,7 +31,7 @@ Build **Centrifugo-only** — bỏ code path Supabase Realtime legacy (artefact 
 | # | Phase | Status | Blocks / Depends | Effort |
 |---|-------|--------|------------------|--------|
 | 0 | [Foundation & Infra](phase-00-foundation-infra.md) | done ✅ | blocks all | 3-5d |
-| 1 | [Google Auth + Session lifecycle](phase-01-auth-session-lifecycle.md) | pending | dep 0 | 3-4d |
+| 1 | [Google Auth + Session lifecycle](phase-01-auth-session-lifecycle.md) | done ✅ | dep 0 | 3-4d |
 | 2 | [Realtime pipeline (Soniox+Centrifugo)](phase-02-realtime-pipeline.md) ⭐ | pending | dep 0,1 | 1.5-2w |
 | 3 | [Meeting Minutes export](phase-03-meeting-minutes.md) | pending | dep 2 | 3-5d |
 | 4 | [Session management (dashboard/join/tags/bookmarks/search)](phase-04-session-management.md) | pending | dep 1,2 | 1.5-2w |

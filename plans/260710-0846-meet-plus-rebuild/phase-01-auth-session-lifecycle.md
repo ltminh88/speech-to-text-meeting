@@ -1,6 +1,6 @@
 # Phase 1 — Google Auth + Session lifecycle (MVP)
 
-**Priority:** P1 · **Status:** pending · **Depends:** Phase 0 · **Effort:** 3-4d
+**Priority:** P1 · **Status:** done (code+build+unit tests; live E2E deferred) · **Depends:** Phase 0 · **Effort:** 3-4d
 
 ## Context Links
 - Strategy §4 (sessions/participants columns), §2 (translation modes): `../reports/researcher-260710-0825-meet-plus-rebuild-strategy.md`
