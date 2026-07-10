@@ -54,6 +54,11 @@ export const PATCH: RequestHandler = async ({ params, request, locals: { supabas
   if (body.status === 'ended') {
     patch.status = 'ended';
     patch.ended_at = new Date().toISOString();
+  } else if (body.status === 'active') {
+    // Reopen: sessions never expire on their own, so a host can resume an
+    // ended one at any time — same id, same transcript, just live again.
+    patch.status = 'active';
+    patch.ended_at = null;
   }
 
   if (body.mode !== undefined) {

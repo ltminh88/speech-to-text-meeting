@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { goto } from '$app/navigation';
+  import { goto, invalidateAll } from '$app/navigation';
   import { page } from '$app/state';
   import { PUBLIC_CENTRIFUGO_WS_URL, PUBLIC_REALTIME_WS_URL } from '$env/static/public';
   import { CaptionStore } from '$lib/realtime/caption-store.svelte';
@@ -19,6 +19,7 @@
   let capState = $state<CaptureState>('idle');
   let capErr = $state<string | null>(null);
   let ending = $state(false);
+  let reopening = $state(false);
   let scrollEl: HTMLDivElement | undefined = $state();
   let expanded = $state(false);
 
@@ -111,6 +112,19 @@
     if (res.ok) goto('/dashboard');
     else ending = false;
   }
+
+  // Sessions never expire on their own — a host can resume an ended one at
+  // any time, same id and transcript, just live again.
+  async function reopenSession() {
+    reopening = true;
+    const res = await fetch(`/api/sessions/${page.params.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: 'active' })
+    });
+    if (res.ok) await invalidateAll();
+    reopening = false;
+  }
 </script>
 
 <main class="mx-auto min-h-screen max-w-5xl bg-app p-8">
@@ -137,6 +151,14 @@
           class="rounded-full border border-error/30 px-4 py-1.5 text-sm font-medium text-error transition-colors hover:bg-error/10 disabled:opacity-50"
         >
           {ending ? 'Ending…' : 'End'}
+        </button>
+      {:else if s.is_host && s.status === 'ended'}
+        <button
+          onclick={reopenSession}
+          disabled={reopening}
+          class="rounded-full bg-brand px-4 py-1.5 text-sm font-medium text-white shadow-soft-sm transition-colors hover:bg-brand-hover disabled:opacity-50"
+        >
+          {reopening ? 'Reopening…' : '▶ Reopen'}
         </button>
       {/if}
     </div>
