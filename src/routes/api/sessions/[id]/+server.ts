@@ -73,6 +73,20 @@ export const PATCH: RequestHandler = async ({ params, request, locals: { supabas
   return json({ ok: true });
 };
 
+// Host-only: permanently delete the session (cascades to participants,
+// transcript, bookmarks, tags, minutes via FK ON DELETE CASCADE). Irreversible.
+export const DELETE: RequestHandler = async ({ params, locals: { supabase, user } }) => {
+  if (!user) throw error(401, 'auth required');
+
+  const { data: s, error: sErr } = await supabase.from('sessions').select('host_id').eq('id', params.id).single();
+  if (sErr || !s) throw error(404, 'session not found');
+  if (s.host_id !== user.id) throw error(403, 'only the host can delete this session');
+
+  const { error: delErr } = await supabase.from('sessions').delete().eq('id', params.id);
+  if (delErr) throw error(500, delErr.message);
+  return json({ ok: true });
+};
+
 function tryDecrypt(payload: string, keyRef: string | null): string | null {
   if (!keyRef) return null;
   try {

@@ -1,6 +1,17 @@
 <script lang="ts">
+  import { invalidateAll } from '$app/navigation';
   import type { PageData } from './$types';
   let { data }: { data: PageData } = $props();
+
+  let deletingId = $state<string | null>(null);
+
+  async function deleteSession(id: string, title: string) {
+    if (!confirm(`Delete "${title}"? This permanently removes its transcript and cannot be undone.`)) return;
+    deletingId = id;
+    const res = await fetch(`/api/sessions/${id}`, { method: 'DELETE' });
+    if (res.ok) await invalidateAll();
+    deletingId = null;
+  }
 </script>
 
 <main class="mx-auto max-w-4xl p-8">
@@ -22,7 +33,19 @@
     {#each data.sessions as s (s.id)}
       <li class="flex items-center justify-between py-3">
         <a href={`/session/${s.id}`} class="font-medium hover:text-brand">{s.title ?? 'Untitled session'}</a>
-        <span class="text-sm text-slate-400">{s.mode} · {s.status}{s.is_host ? ' · host' : ''}</span>
+        <div class="flex items-center gap-3">
+          <span class="text-sm text-slate-400">{s.mode} · {s.status}{s.is_host ? ' · host' : ''}</span>
+          {#if s.is_host}
+            <button
+              onclick={() => deleteSession(s.id, s.title ?? 'Untitled session')}
+              disabled={deletingId === s.id}
+              class="text-sm text-red-500 hover:text-red-600 disabled:opacity-50"
+              title="Delete session"
+            >
+              🗑
+            </button>
+          {/if}
+        </div>
       </li>
     {:else}
       <li class="py-6 text-center text-sm text-slate-400">No sessions yet — create one to start.</li>
