@@ -9,10 +9,18 @@
   let target_language = $state('ja');
   let language_a = $state('en');
   let language_b = $state('ja');
+  let durationMinutes = $state<number | null>(null);
   let submitting = $state(false);
   let err = $state<string | null>(null);
 
   const modeLabel: Record<TranslationMode, string> = { none: 'None', one_way: 'One-way', two_way: 'Two-way' };
+  const DURATION_OPTIONS: { value: number | null; label: string }[] = [
+    { value: null, label: 'No limit' },
+    { value: 15, label: '15 min' },
+    { value: 30, label: '30 min' },
+    { value: 60, label: '60 min' },
+    { value: 90, label: '90 min' }
+  ];
   const inputClass =
     'mt-1 w-full rounded-lg border border-border bg-panel px-3 py-2 text-ink-primary placeholder:text-ink-muted focus:border-brand focus:outline-none focus:ring-1 focus:ring-brand';
 
@@ -22,7 +30,7 @@
     const res = await fetch('/api/sessions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ title, mode, no_record, source_language, target_language, language_a, language_b })
+      body: JSON.stringify({ title, mode, no_record, source_language, target_language, language_a, language_b, durationMinutes })
     });
     if (res.ok) {
       const { sessionId } = await res.json();
@@ -93,6 +101,24 @@
           </label>
         </div>
       {/if}
+
+      <div class="mb-5">
+        <span class="mb-1.5 block text-sm font-medium text-ink-secondary">Duration limit</span>
+        <div class="flex flex-wrap gap-1 rounded-full border border-border bg-elevated p-1">
+          {#each DURATION_OPTIONS as opt}
+            <button
+              type="button"
+              onclick={() => (durationMinutes = opt.value)}
+              class="rounded-full px-3 py-1.5 text-sm font-medium transition-colors {durationMinutes === opt.value
+                ? 'bg-brand text-white shadow-soft-sm'
+                : 'text-ink-secondary hover:text-ink-primary'}"
+            >
+              {opt.label}
+            </button>
+          {/each}
+        </div>
+        <p class="mt-1 text-xs text-ink-muted">Session auto-ends once the limit is reached.</p>
+      </div>
 
       <label class="mb-6 flex items-center gap-2 text-sm text-ink-secondary">
         <input type="checkbox" bind:checked={no_record} class="h-4 w-4 rounded border-border text-brand focus:ring-brand" />

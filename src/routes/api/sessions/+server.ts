@@ -1,9 +1,12 @@
 import { json, error } from '@sveltejs/kit';
 import { validateSessionConfig, normalizeConfig } from '$lib/session/session-config';
 import { encrypt, decrypt, newKeyRef } from '$lib/server/crypto';
+import { isExpired } from '$lib/server/session-expiry';
 import type { RequestHandler } from './$types';
 
 // Create a session (+ host participant). Title is stored encrypted.
+// Optional durationMinutes sets a hard time limit (session auto-ends once
+// expires_at passes — checked lazily, no background job).
 export const POST: RequestHandler = async ({ request, locals: { supabase, user } }) => {
   if (!user) throw error(401, 'auth required');
   const body = await request.json();
@@ -14,6 +17,11 @@ export const POST: RequestHandler = async ({ request, locals: { supabase, user }
 
   const keyRef = newKeyRef();
   const title: string = (body.title ?? '').toString().slice(0, 200);
+  const durationMinutes: number | null =
+    typeof body.durationMinutes === 'number' && Number.isFinite(body.durationMinutes) && body.durationMinutes > 0
+      ? body.durationMinutes
+      : null;
+  const expires_at = durationMinutes ? new Date(Date.now() + durationMinutes * 60_000).toISOString() : null;
 
   const { data: session, error: insErr } = await supabase
     .from('sessions')
@@ -21,7 +29,8 @@ export const POST: RequestHandler = async ({ request, locals: { supabase, user }
       host_id: user.id,
       ...config,
       title_encrypted: title ? encrypt(title, keyRef) : null,
-      encryption_key_ref: keyRef
+      encryption_key_ref: keyRef,
+      expires_at
     })
     .select()
     .single();
@@ -40,14 +49,16 @@ export const GET: RequestHandler = async ({ locals: { supabase, user } }) => {
   if (!user) throw error(401, 'auth required');
   const { data, error: selErr } = await supabase
     .from('sessions')
-    .select('id, status, mode, title_encrypted, encryption_key_ref, started_at, ended_at, host_id')
+    .select('id, status, mode, title_encrypted, encryption_key_ref, started_at, ended_at, expires_at, host_id')
     .order('started_at', { ascending: false })
     .limit(100);
   if (selErr) throw error(500, selErr.message);
 
+  // Display-only: shows expired sessions as "ended" without writing (avoids
+  // N updates on a list read). The single-session GET is what persists it.
   const sessions = (data ?? []).map((s) => ({
     id: s.id,
-    status: s.status,
+    status: isExpired(s.status, s.expires_at) ? 'ended' : s.status,
     mode: s.mode,
     title: s.title_encrypted ? safeDecrypt(s.title_encrypted, s.encryption_key_ref) : null,
     started_at: s.started_at,
