@@ -1,0 +1,18 @@
+# Centrifugo realtime server. Run with Podman: `podman compose up -d`
+# (Docker-compatible; also runnable as a bare binary via `npm run centrifugo`.)
+# Secrets from the shell/.env override the dev defaults baked into centrifugo/config.json.
+services:
+  centrifugo:
+    image: centrifugo/centrifugo:v6
+    command: centrifugo -c /centrifugo/config.json
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./centrifugo:/centrifugo:ro,z
+    environment:
+      CENTRIFUGO_CLIENT_TOKEN_HMAC_SECRET_KEY: ${CENTRIFUGO_HMAC_SECRET:-change-me-long-random}
+      CENTRIFUGO_HTTP_API_KEY: ${CENTRIFUGO_API_KEY:-change-me-api-key}
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
