@@ -1,7 +1,17 @@
 #!/usr/bin/env bash
-# Usage: ./scripts/meeting-translate up|down
+# Usage: meeting-translate up|down
+# Resolves its own real location even when invoked through a symlink (e.g.
+# installed as a global command), so it always finds the right project root.
 set -euo pipefail
-cd "$(dirname "$0")/.."
+
+source="${BASH_SOURCE[0]}"
+while [ -h "$source" ]; do
+  dir="$(cd -P "$(dirname "$source")" >/dev/null 2>&1 && pwd)"
+  source="$(readlink "$source")"
+  [[ $source != /* ]] && source="$dir/$source"
+done
+script_dir="$(cd -P "$(dirname "$source")" >/dev/null 2>&1 && pwd)"
+cd "$script_dir/.."
 
 up() {
   if [ ! -f .env ]; then
@@ -45,7 +55,7 @@ Ready:
   Realtime WS  -> ws://localhost:3001/realtime
 
 Logs: /tmp/stt-meeting-web.log , /tmp/stt-meeting-realtime.log
-Stop everything: ./scripts/meeting-translate down
+Stop everything: meeting-translate down
 EOF
 }
 

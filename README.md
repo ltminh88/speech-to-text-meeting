@@ -105,6 +105,17 @@ To stop everything:
 Logs while running: `/tmp/stt-meeting-web.log` and
 `/tmp/stt-meeting-realtime.log`.
 
+### Optional: install as a global command
+
+So you can just type `meeting-translate up` / `meeting-translate down`
+from anywhere, symlink it into a directory already on your `$PATH`
+(e.g. `/opt/homebrew/bin` on Apple Silicon Homebrew, `/usr/local/bin`
+otherwise):
+
+```bash
+ln -sf "$PWD/scripts/meeting-translate" /opt/homebrew/bin/meeting-translate
+```
+
 ## Troubleshooting
 
 - **"Start speaking" does nothing / mic permission never appears** —
