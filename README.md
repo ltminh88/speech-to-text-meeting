@@ -119,6 +119,12 @@ To stop everything:
 Logs while running: `/tmp/stt-meeting-web.log` and
 `/tmp/stt-meeting-realtime.log`.
 
+`up` auto-starts the Podman machine if it isn't running (macOS/Windows).
+`down` stops it too, but **only if no other containers are still running
+on it** — Podman's background VM is shared across all your local
+container work, not just this project, so it won't get yanked out from
+under something else.
+
 ### Optional: install as a global command
 
 So you can just type `meeting-translate up` / `meeting-translate down`
@@ -140,8 +146,8 @@ ln -sf "$PWD/scripts/meeting-translate" /opt/homebrew/bin/meeting-translate
   file or directory"** — a leftover Centrifugo container from a previous
   folder location. Fix: `podman rm -f mp-centrifugo` then run
   `./scripts/meeting-translate up` again.
-- **Podman commands hang or fail on macOS** — the Podman VM isn't running:
-  `podman machine start`.
+- **Podman commands hang or fail on macOS** — `up` normally starts the
+  Podman VM for you; if that fails, run `podman machine start` manually.
 - **Port already in use** — something's already running;
   `./scripts/meeting-translate down` first, then try again.
 

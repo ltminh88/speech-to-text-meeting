@@ -13,6 +13,19 @@ done
 script_dir="$(cd -P "$(dirname "$source")" >/dev/null 2>&1 && pwd)"
 cd "$script_dir/.."
 
+# On macOS/Windows, Podman runs inside a background VM ("machine") — native
+# Linux Podman has no such concept, so this is empty there (skip machine
+# start/stop entirely). Never assume the default name: Podman's own default
+# ("podman-machine-default") errors out if the machine was created with a
+# different name, which is common (e.g. Podman Desktop names it "new").
+podman_machine_name() {
+  podman machine list --format '{{.Name}}' 2>/dev/null | head -1 | tr -d '*'
+}
+
+podman_machine_running() {
+  [ "$(podman machine list --format '{{.Running}}' 2>/dev/null | head -1)" = "true" ]
+}
+
 up() {
   if [ ! -f .env ]; then
     echo "Missing .env — copy the example and fill in your keys first:"
@@ -29,6 +42,13 @@ up() {
     echo "Podman not found — install: https://podman.io/docs/installation"
     exit 1
   fi
+
+  machine="$(podman_machine_name)"
+  if [ -n "$machine" ] && ! podman_machine_running; then
+    echo "==> starting Podman machine ($machine)"
+    podman machine start "$machine"
+  fi
+
   if podman ps -a --format '{{.Names}}' 2>/dev/null | grep -qx mp-centrifugo; then
     podman start mp-centrifugo >/dev/null
   else
@@ -66,6 +86,15 @@ down() {
 
   echo "==> stopping Centrifugo"
   podman stop mp-centrifugo >/dev/null 2>&1 || true
+
+  # The Podman machine is shared across all local container work, not just
+  # this project — only stop it if nothing else is left running on it, so we
+  # don't yank the rug out from under some other project.
+  machine="$(podman_machine_name)"
+  if [ -n "$machine" ] && [ -z "$(podman ps -q 2>/dev/null)" ]; then
+    echo "==> no other containers running — stopping Podman machine ($machine) too"
+    podman machine stop "$machine" >/dev/null 2>&1 || true
+  fi
 
   echo "All stopped."
 }
