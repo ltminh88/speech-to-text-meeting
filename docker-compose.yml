@@ -16,3 +16,20 @@ services:
       nofile:
         soft: 65536
         hard: 65536
+
+  realtime-server:
+    build: ./services/realtime-server
+    ports:
+      - "3001:3001"
+    environment:
+      PORT: 3001
+      PUBLIC_APP_URL: ${PUBLIC_APP_URL:-http://localhost:5173}
+      PUBLIC_SUPABASE_URL: ${PUBLIC_SUPABASE_URL}
+      PUBLIC_SUPABASE_ANON_KEY: ${PUBLIC_SUPABASE_ANON_KEY}
+      SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY}
+      SONIOX_API_KEY: ${SONIOX_API_KEY}
+      CENTRIFUGO_API_URL: http://centrifugo:8000/api
+      CENTRIFUGO_API_KEY: ${CENTRIFUGO_API_KEY:-change-me-api-key}
+      TRANSCRIPT_MASTER_KEY: ${TRANSCRIPT_MASTER_KEY}
+    depends_on:
+      - centrifugo

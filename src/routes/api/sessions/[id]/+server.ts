@@ -28,6 +28,7 @@ export const GET: RequestHandler = async ({ params, locals: { supabase, user } }
       language_b: s.language_b,
       title: s.title_encrypted ? tryDecrypt(s.title_encrypted, s.encryption_key_ref) : null,
       is_host: s.host_id === user.id,
+      my_participant_id: (participants ?? []).find((p) => p.user_id === user.id)?.id ?? null,
       started_at: s.started_at,
       ended_at: s.ended_at
     },

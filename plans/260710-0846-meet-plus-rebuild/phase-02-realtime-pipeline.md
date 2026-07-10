@@ -1,6 +1,6 @@
 # Phase 2 — Realtime pipeline (Soniox + Centrifugo) ⭐
 
-**Priority:** P1 · **Status:** pending · **Depends:** Phase 0, 1 · **Effort:** 1.5-2w
+**Priority:** P1 · **Status:** done (code+typecheck+unit tests; live Soniox/Centrifugo run deferred) · **Depends:** Phase 0, 1 · **Effort:** 1.5-2w
 **Highest technical risk — build earliest for risk reduction.**
 
 ## Context Links
